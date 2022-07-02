@@ -2,12 +2,14 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"io"
+	"log"
 	"net/http"
+	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 type booklogInfo struct {
@@ -27,15 +29,36 @@ type booklogInfo struct {
 
 var (
 	bookGage = promauto.NewGaugeVec(
-		prometheus.Options{
+		prometheus.GaugeOpts{
 			Namespace: "booklog",
 			Name:      "read_books_total",
 			Help:      "Read books",
-		}, []string{"books"},
+		}, []string{"user"},
 	)
 )
 
-func getBooklogInfo() {
+func main() {
+	prometheus.Register(bookGage)
+
+	http.Handle("/metrics", promhttp.Handler())
+
+	go func() {
+		setValue()
+	}()
+	log.Fatal(http.ListenAndServe(":8080", nil))
+}
+
+func setValue() {
+	n := len(getBooklogInfo().Books)
+	f := float64(n)
+	labels := prometheus.Labels{
+		"user": getBooklogInfo().Tana.Name,
+	}
+	bookGage.With(labels).Set(f)
+	time.Sleep(10 * time.Second)
+}
+
+func getBooklogInfo() booklogInfo {
 	url := "http://api.booklog.jp/v2/json/vtryo?count=1000"
 
 	res, err := http.Get(url)
@@ -47,7 +70,7 @@ func getBooklogInfo() {
 	body, _ := io.ReadAll(res.Body)
 	jsonpStr := string(body)
 
-	var s booklogInfo
-	json.Unmarshal([]byte(jsonpStr), &s)
-	fmt.Println(len(s.Books))
+	var info booklogInfo
+	json.Unmarshal([]byte(jsonpStr), &info)
+	return info
 }
