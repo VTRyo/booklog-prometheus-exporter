@@ -5,6 +5,9 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promauto"
 )
 
 type booklogInfo struct {
@@ -22,8 +25,18 @@ type booklogInfo struct {
 	}
 }
 
-func main() {
-	url := "http://api.booklog.jp/v2/json/vtryo"
+var (
+	bookGage = promauto.NewGaugeVec(
+		prometheus.Options{
+			Namespace: "booklog",
+			Name:      "read_books_total",
+			Help:      "Read books",
+		}, []string{"books"},
+	)
+)
+
+func getBooklogInfo() {
+	url := "http://api.booklog.jp/v2/json/vtryo?count=1000"
 
 	res, err := http.Get(url)
 	if err != nil {
@@ -36,5 +49,5 @@ func main() {
 
 	var s booklogInfo
 	json.Unmarshal([]byte(jsonpStr), &s)
-	fmt.Println(s)
+	fmt.Println(len(s.Books))
 }
