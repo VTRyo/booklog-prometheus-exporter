@@ -5,6 +5,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
@@ -55,11 +56,11 @@ func setValue() {
 		"user": getBooklogInfo().Tana.Name,
 	}
 	bookGage.With(labels).Set(f)
-	time.Sleep(10 * time.Second)
+	time.Sleep(86400 * time.Second) // 1日間隔
 }
 
 func getBooklogInfo() booklogInfo {
-	url := "http://api.booklog.jp/v2/json/vtryo?count=1000"
+	url := os.Args[1]
 
 	res, err := http.Get(url)
 	if err != nil {
