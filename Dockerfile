@@ -13,6 +13,7 @@ RUN go build \
     -ldflags '-s -w'
 
 FROM alpine:latest as runner
+RUN apk add curl
 COPY --from=builder /go/bin/booklog-prometheus-exporter /app/booklog-prometheus-exporter
 
 # don't create homeDir.
