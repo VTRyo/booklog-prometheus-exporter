@@ -2,6 +2,8 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
+	"github.com/joho/godotenv"
 	"io"
 	"log"
 	"net/http"
@@ -27,6 +29,8 @@ type booklogInfo struct {
 		Catalog string `json:"catalog"`
 	}
 }
+
+const baseUrl = "http://api.booklog.jp/v2/json/"
 
 var (
 	bookGage = promauto.NewGaugeVec(
@@ -59,8 +63,19 @@ func setValue() {
 	time.Sleep(86400 * time.Second) // 1日間隔
 }
 
+func loadEnv() {
+	err := godotenv.Load(".env")
+
+	if err != nil {
+		fmt.Printf("Can't load file: %v", err)
+	}
+}
+
 func getBooklogInfo() booklogInfo {
-	url := os.Args[1]
+	loadEnv()
+
+	accountName := os.Getenv("ACCOUNT_ID")
+	url := baseUrl + accountName
 
 	res, err := http.Get(url)
 	if err != nil {
