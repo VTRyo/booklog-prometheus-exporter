@@ -6,7 +6,6 @@ import (
 )
 
 func TestGetBooklogInfo(t *testing.T) {
-	loadEnv()
 	os.Setenv("ACCOUNT_ID", "vtryo")
 	account := getBooklogInfo().Tana.Account
 	name := getBooklogInfo().Tana.Name
