@@ -1,0 +1,45 @@
+name: go-ci
+
+on:
+  push:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  setup:
+    runs-on: ubuntu-latest
+    steps:
+    - name: set up go
+      uses: actions/setup-go@v2
+      with:
+        go-version: 1.18
+      id: go
+    - name: check out
+      uses: actions/checkout@v2
+
+    - name: cache
+      uses: actions/cache@2.1.0
+      with:
+        path: ~/go/pkg/mod
+        key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+        restore-keys: |
+          ${{ runner.os }}-go-
+
+  build:
+    needs: setup
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: build
+        run: go build ./...
+
+  test:
+    needs: setup
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: test
+        run: go test ./... -v
+
+
